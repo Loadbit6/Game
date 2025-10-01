@@ -1,32 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Aspect Ratio Locked Game3</title>
+  <title>Aspect Ratio Locked Game</title>
   <style>
     body { margin: 0; background: black; overflow: hidden; }
     canvas { display: block; }
   </style>
 </head>
 <body>
-  <canvas id="screen"></canvas>
+  <canvas id="game"></canvas>
   <script>
-    // Fixed game resolution
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    // Fixed game resolution (3:2 ratio)
     const GAME_WIDTH = 600;
     const GAME_HEIGHT = 400;
 
-    // Offscreen canvas (the real game world)
-    const gameCanvas = document.createElement("canvas");
-    gameCanvas.width = GAME_WIDTH;
-    gameCanvas.height = GAME_HEIGHT;
-    const gameCtx = gameCanvas.getContext("2d");
-
-    // On-screen canvas
-    const screenCanvas = document.getElementById("screen");
-    const screenCtx = screenCanvas.getContext("2d");
-
+    // Resize canvas to window
     function resizeCanvas() {
-      screenCanvas.width = window.innerWidth;
-      screenCanvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
@@ -35,8 +29,8 @@
     let player = { x: 50, y: 50, size: 30, color: "lime" };
 
     function drawPlayer() {
-      gameCtx.fillStyle = player.color;
-      gameCtx.fillRect(player.x, player.y, player.size, player.size);
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.size, player.size);
     }
 
     // Input
@@ -51,33 +45,33 @@
       if (keys["ArrowRight"]) player.x += 3;
     }
 
-    // Main game loop
+    // Game loop
     function loop() {
-      // Clear game world
-      gameCtx.fillStyle = "#222";
-      gameCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update & draw
+      // Fill black background
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Calculate scale factor (keep aspect ratio)
+      const scale = Math.min(
+        canvas.width / GAME_WIDTH,
+        canvas.height / GAME_HEIGHT
+      );
+
+      // Center the game area
+      const offsetX = (canvas.width - GAME_WIDTH * scale) / 2;
+      const offsetY = (canvas.height - GAME_HEIGHT * scale) / 2;
+
+      // Apply scaling + translation
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+
       update();
       drawPlayer();
 
-      // Clear screen
-      screenCtx.fillStyle = "black";
-      screenCtx.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
-
-      // Aspect ratio scale
-      const scale = Math.min(
-        screenCanvas.width / GAME_WIDTH,
-        screenCanvas.height / GAME_HEIGHT
-      );
-
-      const drawWidth = GAME_WIDTH * scale;
-      const drawHeight = GAME_HEIGHT * scale;
-      const offsetX = (screenCanvas.width - drawWidth) / 2;
-      const offsetY = (screenCanvas.height - drawHeight) / 2;
-
-      // Draw game world centered and scaled, no stretching
-      screenCtx.drawImage(gameCanvas, offsetX, offsetY, drawWidth, drawHeight);
+      ctx.restore();
 
       requestAnimationFrame(loop);
     }
