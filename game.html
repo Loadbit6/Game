@@ -10,19 +10,20 @@
 <body>
   <canvas id="screen"></canvas>
   <script>
-    // The canvas shown on screen
-    const screenCanvas = document.getElementById("screen");
-    const screenCtx = screenCanvas.getContext("2d");
-
-    // The fixed-size "game world" canvas (offscreen)
+    // Fixed game resolution
     const GAME_WIDTH = 600;
     const GAME_HEIGHT = 400;
+
+    // Offscreen canvas (the real game world)
     const gameCanvas = document.createElement("canvas");
     gameCanvas.width = GAME_WIDTH;
     gameCanvas.height = GAME_HEIGHT;
     const gameCtx = gameCanvas.getContext("2d");
 
-    // Resize screen canvas to window
+    // On-screen canvas
+    const screenCanvas = document.getElementById("screen");
+    const screenCtx = screenCanvas.getContext("2d");
+
     function resizeCanvas() {
       screenCanvas.width = window.innerWidth;
       screenCanvas.height = window.innerHeight;
@@ -50,36 +51,33 @@
       if (keys["ArrowRight"]) player.x += 3;
     }
 
-    // Game loop
+    // Main game loop
     function loop() {
-      // Clear the game world
+      // Clear game world
       gameCtx.fillStyle = "#222";
       gameCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-      // Update + draw game
+      // Update & draw
       update();
       drawPlayer();
 
-      // Clear the screen
+      // Clear screen
       screenCtx.fillStyle = "black";
       screenCtx.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
 
-      // Calculate scale factor while keeping aspect ratio
+      // Aspect ratio scale
       const scale = Math.min(
         screenCanvas.width / GAME_WIDTH,
         screenCanvas.height / GAME_HEIGHT
       );
 
-      // Center on screen
-      const offsetX = (screenCanvas.width - GAME_WIDTH * scale) / 2;
-      const offsetY = (screenCanvas.height - GAME_HEIGHT * scale) / 2;
+      const drawWidth = GAME_WIDTH * scale;
+      const drawHeight = GAME_HEIGHT * scale;
+      const offsetX = (screenCanvas.width - drawWidth) / 2;
+      const offsetY = (screenCanvas.height - drawHeight) / 2;
 
-      // Draw the fixed game canvas scaled onto the screen
-      screenCtx.drawImage(
-        gameCanvas,
-        0, 0, GAME_WIDTH, GAME_HEIGHT,     // source
-        offsetX, offsetY, GAME_WIDTH * scale, GAME_HEIGHT * scale // destination
-      );
+      // Draw game world centered and scaled, no stretching
+      screenCtx.drawImage(gameCanvas, offsetX, offsetY, drawWidth, drawHeight);
 
       requestAnimationFrame(loop);
     }
