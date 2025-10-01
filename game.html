@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Scaled Game</title>
+  <title>Aspect Ratio Locked Game</title>
   <style>
-    body { margin: 0; background: black; }
+    body { margin: 0; background: black; overflow: hidden; }
     canvas { display: block; }
   </style>
 </head>
@@ -13,7 +13,7 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    // Fixed world size
+    // Fixed game resolution (3:2 ratio)
     const GAME_WIDTH = 600;
     const GAME_HEIGHT = 400;
 
@@ -49,13 +49,30 @@
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Fill black background
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Calculate scale factor (keep aspect ratio)
+      const scale = Math.min(
+        canvas.width / GAME_WIDTH,
+        canvas.height / GAME_HEIGHT
+      );
+
+      // Center the game area
+      const offsetX = (canvas.width - GAME_WIDTH * scale) / 2;
+      const offsetY = (canvas.height - GAME_HEIGHT * scale) / 2;
+
+      // Apply scaling + translation
       ctx.save();
-      ctx.scale(canvas.width / GAME_WIDTH, canvas.height / GAME_HEIGHT);
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
 
       update();
       drawPlayer();
 
       ctx.restore();
+
       requestAnimationFrame(loop);
     }
 
