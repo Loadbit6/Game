@@ -10,11 +10,10 @@
 <body>
   <canvas id="screen"></canvas>
   <script>
-    // The canvas shown on screen
+    // ===== Setup =====
     const screenCanvas = document.getElementById("screen");
     const screenCtx = screenCanvas.getContext("2d");
 
-    // The fixed-size "game world" canvas (offscreen)
     const GAME_WIDTH = 1600;
     const GAME_HEIGHT = 800;
     const gameCanvas = document.createElement("canvas");
@@ -22,7 +21,7 @@
     gameCanvas.height = GAME_HEIGHT;
     const gameCtx = gameCanvas.getContext("2d");
 
-    // Resize screen canvas to window
+    // Resize screen to fit window
     function resizeCanvas() {
       screenCanvas.width = window.innerWidth;
       screenCanvas.height = window.innerHeight;
@@ -30,14 +29,15 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Walls
+    // ===== Wall =====
     let wall = { x: 300, y: 150, width: 100, height: 100, color: "red" };
 
     function drawWall() {
-      ctx.fillStyle = wall.color;
-      ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+      gameCtx.fillStyle = wall.color;
+      gameCtx.fillRect(wall.x, wall.y, wall.width, wall.height);
     }
 
+    // ===== Collision =====
     function isColliding(a, b) {
       return (
         a.x < b.x + b.width &&
@@ -47,9 +47,7 @@
       );
     }
 
-
-    
-    // Player
+    // ===== Player =====
     let player = { x: 50, y: 50, size: 30, color: "lime" };
 
     function drawPlayer() {
@@ -57,58 +55,55 @@
       gameCtx.fillRect(player.x, player.y, player.size, player.size);
     }
 
-    // Input
+    // ===== Input =====
     let keys = {};
     window.addEventListener("keydown", e => keys[e.key] = true);
     window.addEventListener("keyup", e => keys[e.key] = false);
 
+    // ===== Update =====
     function update() {
       let speed = 3;
       let oldX = player.x;
       let oldY = player.y;
 
-          if (keys["ArrowUp"])    player.y -= speed;
-          if (keys["ArrowDown"])  player.y += speed;
-          if (keys["ArrowLeft"])  player.x -= speed;
-          if (keys["ArrowRight"]) player.x += speed;
+      if (keys["ArrowUp"])    player.y -= speed;
+      if (keys["ArrowDown"])  player.y += speed;
+      if (keys["ArrowLeft"])  player.x -= speed;
+      if (keys["ArrowRight"]) player.x += speed;
 
-      // Check collision with wall
       if (isColliding(player, wall)) {
         player.x = oldX;
         player.y = oldY;
       }
     }
 
-    // Game loop
+    // ===== Game Loop =====
     function loop() {
-      // Clear the game world
+      // Clear game world
       gameCtx.fillStyle = "#222";
       gameCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-      // Update + draw game
       update();
-      drawPlayer();
       drawWall();
+      drawPlayer();
 
-      // Clear the screen
+      // Clear the display
       screenCtx.fillStyle = "black";
       screenCtx.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
 
-      // Calculate scale factor while keeping aspect ratio
+      // Calculate scale and offset for centered rendering
       const scale = Math.min(
         screenCanvas.width / GAME_WIDTH,
         screenCanvas.height / GAME_HEIGHT
       );
-
-      // Center on screen
       const offsetX = (screenCanvas.width - GAME_WIDTH * scale) / 2;
       const offsetY = (screenCanvas.height - GAME_HEIGHT * scale) / 2;
 
-      // Draw the fixed game canvas scaled onto the screen
+      // Draw scaled game
       screenCtx.drawImage(
         gameCanvas,
-        0, 0, GAME_WIDTH, GAME_HEIGHT,     // source
-        offsetX, offsetY, GAME_WIDTH * scale, GAME_HEIGHT * scale // destination
+        0, 0, GAME_WIDTH, GAME_HEIGHT,
+        offsetX, offsetY, GAME_WIDTH * scale, GAME_HEIGHT * scale
       );
 
       requestAnimationFrame(loop);
