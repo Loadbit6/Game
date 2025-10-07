@@ -11,8 +11,8 @@
   <canvas id="screen"></canvas>
   <script>
     // Fixed game resolution
-    const GAME_WIDTH = 800;
-    const GAME_HEIGHT = 450;
+    const GAME_WIDTH = 400;
+    const GAME_HEIGHT = 225;
 
     // Offscreen canvas (game world)
     const gameCanvas = document.createElement("canvas");
@@ -32,11 +32,11 @@
     resizeCanvas();
 
     // Player
-    let player = { x: 16, y: 32, size: 10, color: "lime" };
+    let player = { x: 16, y: 32, width: 16, height: 32, color: "lime" };
 
     function drawPlayer() {
       gameCtx.fillStyle = player.color;
-      gameCtx.fillRect(player.x, player.y, player.size, player.size);
+      gameCtx.fillRect(player.x, player.y, player.width, player.height);
     }
 
     // Input
@@ -45,10 +45,10 @@
     window.addEventListener("keyup", e => keys[e.key] = false);
 
     function update() {
-      if (keys["w"])    player.y -= 5;
-      if (keys["s"])  player.y += 5;
-      if (keys["a"])  player.x -= 5;
-      if (keys["d"]) player.x += 5;
+      if (keys["w"])    player.y -= 1;
+      if (keys["s"])  player.y += 1;
+      if (keys["a"])  player.x -= 1;
+      if (keys["d"]) player.x += 1;
     }
 
     function loop() {
