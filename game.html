@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Aspect Ratio Locked Game</title>
+  <title>Surge</title>
   <style>
     body { margin: 0; background: black; overflow: hidden; }
     canvas { display: block; }
@@ -11,8 +11,8 @@
   <canvas id="screen"></canvas>
   <script>
     // Fixed game resolution
-    const GAME_WIDTH = 600;
-    const GAME_HEIGHT = 400;
+    const GAME_WIDTH = 1600;
+    const GAME_HEIGHT = 900;
 
     // Offscreen canvas (game world)
     const gameCanvas = document.createElement("canvas");
@@ -45,10 +45,10 @@
     window.addEventListener("keyup", e => keys[e.key] = false);
 
     function update() {
-      if (keys["ArrowUp"])    player.y -= 3;
-      if (keys["ArrowDown"])  player.y += 3;
-      if (keys["ArrowLeft"])  player.x -= 3;
-      if (keys["ArrowRight"]) player.x += 3;
+      if (keys["ArrowUp"])    player.y -= 10;
+      if (keys["ArrowDown"])  player.y += 10;
+      if (keys["ArrowLeft"])  player.x -= 10;
+      if (keys["ArrowRight"]) player.x += 10;
     }
 
     function loop() {
