@@ -1,38 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Slurp</title>
+  <title>Surged</title>
   <style>
     body { margin: 0; background: black; overflow: hidden; }
-    canvas { display: block; image-rendering: pixelated; }
+    canvas { display: block; }
   </style>
 </head>
 <body>
   <canvas id="screen"></canvas>
   <script>
-
- // ===== Setup =====
-    const screenCanvas = document.getElementById("screen");
-    const screenCtx = screenCanvas.getContext("2d");
-    
-    //sharp pixel stuff
-
-    screenCtx.imageSmoothingEnabled = false;   // disable smoothing for sharp scaling
-    screenCtx.webkitImageSmoothingEnabled = false;
-    screenCtx.mozImageSmoothingEnabled = false;
-    screenCtx.msImageSmoothingEnabled = false;
-    
-    // Fixed game resolution
     const GAME_WIDTH = 400;
     const GAME_HEIGHT = 225;
 
-    // Offscreen canvas (game world)
     const gameCanvas = document.createElement("canvas");
     gameCanvas.width = GAME_WIDTH;
     gameCanvas.height = GAME_HEIGHT;
     const gameCtx = gameCanvas.getContext("2d");
 
-    // Onscreen canvas
     const screenCanvas = document.getElementById("screen");
     const screenCtx = screenCanvas.getContext("2d");
 
@@ -43,94 +28,47 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Player
     let player = { x: 16, y: 32, width: 16, height: 32, color: "lime" };
 
-        function drawPlayer() {
+    function drawPlayer() {
       gameCtx.fillStyle = player.color;
-      gameCtx.fillRect(
-        Math.round(player.x),
-        Math.round(player.y),
-        Math.round(player.size),
-        Math.round(player.size)
-      );
-      // example sharp vertical line at player's right
-      gameCtx.fillStyle = "white";
-      gameCtx.fillRect(
-        Math.round(player.x + player.size + 1),
-        Math.round(player.y),
-        1,
-        Math.round(player.size)
-      );
+      gameCtx.fillRect(player.x, player.y, 1, 32);
+      gameCtx.fillStyle = "red";
+      gameCtx.fillRect(player.x + 1, player.y, 1, 32);
     }
 
-    // Input
     let keys = {};
     window.addEventListener("keydown", e => keys[e.key] = true);
     window.addEventListener("keyup", e => keys[e.key] = false);
 
     function update() {
-      if (keys["w"])    player.y -= 1;
-      if (keys["s"])  player.y += 1;
-      if (keys["a"])  player.x -= 1;
+      if (keys["w"]) player.y -= 1;
+      if (keys["s"]) player.y += 1;
+      if (keys["a"]) player.x -= 1;
       if (keys["d"]) player.x += 1;
     }
 
     function loop() {
-      // Clear game world
       gameCtx.fillStyle = "#222";
       gameCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-      // Update & draw
       update();
       drawPlayer();
 
-      // Clear screen
+      gameCtx.strokeStyle = "red";
+      gameCtx.lineWidth = 4;
+      gameCtx.strokeRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
       screenCtx.fillStyle = "black";
       screenCtx.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
 
-          // Compute candidate scale (could be fractional)
-      const candidate = Math.min(
-        screenCanvas.width / GAME_WIDTH,
-        screenCanvas.height / GAME_HEIGHT
-      );
+      const scale = Math.min(screenCanvas.width / GAME_WIDTH, screenCanvas.height / GAME_HEIGHT);
+      const drawWidth = GAME_WIDTH * scale;
+      const drawHeight = GAME_HEIGHT * scale;
+      const offsetX = (screenCanvas.width - drawWidth) / 2;
+      const offsetY = (screenCanvas.height - drawHeight) / 2;
 
-      // Use integer scale when >=1 for perfect pixel scaling.
-      // If candidate < 1 (screen smaller than game), allow fractional scale
-      // so the game still fits (avoids scale = 0).
-      const scale = candidate >= 1 ? Math.floor(candidate) : candidate;
-
-      // If scale is zero or negative (edge case), bail to avoid invisible draw
-      if (!isFinite(scale) || scale <= 0) {
-        // show message on screen so you know something's wrong
-        screenCtx.fillStyle = "white";
-        screenCtx.font = "18px monospace";
-        screenCtx.fillText("Screen too small to render game.", 10, 30);
-        requestAnimationFrame(loop);
-        return;
-      }
-
-      // Destination size and offsets (rounded to pixel boundaries)
-      const drawWidth = Math.round(GAME_WIDTH * scale);
-      const drawHeight = Math.round(GAME_HEIGHT * scale);
-      const offsetX = Math.round((screenCanvas.width - drawWidth) / 2);
-      const offsetY = Math.round((screenCanvas.height - drawHeight) / 2);
-
-      // draw the offscreen canvas scaled onto visible canvas (nearest neighbor)
-      screenCtx.drawImage(
-        gameCanvas,
-        0, 0, GAME_WIDTH, GAME_HEIGHT,
-        offsetX, offsetY, drawWidth, drawHeight
-      );
-
-      // debug: draw red border around the visible game area and scale text
-      screenCtx.strokeStyle = "red";
-      screenCtx.lineWidth = 2;
-      screenCtx.strokeRect(offsetX + 0.5, offsetY + 0.5, drawWidth - 1, drawHeight - 1);
-
-      screenCtx.fillStyle = "white";
-      screenCtx.font = "16px monospace";
-      screenCtx.fillText(`scale: ${scale.toFixed(2)}`, offsetX + 8, offsetY + 20);
+      screenCtx.drawImage(gameCanvas, offsetX, offsetY, drawWidth, drawHeight);
 
       requestAnimationFrame(loop);
     }
