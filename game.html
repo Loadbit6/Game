@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Surging</title>
+  <title>Surgag</title>
   <style>
     body { margin: 0; background: black; overflow: hidden; }
-    canvas { display: block; }
+    canvas { display: block; image-rendering: pixelated; }
   </style>
 </head>
 <body>
   <canvas id="screen"></canvas>
   <script>
+    //sharp pixel stuff
+    screenCtx.imageSmoothingEnabled = false; // disable smoothing for sharp scaling
+
+    
     // Fixed game resolution
     const GAME_WIDTH = 400;
     const GAME_HEIGHT = 225;
@@ -35,10 +39,7 @@
     let player = { x: 16, y: 32, width: 16, height: 32, color: "lime" };
 
     function drawPlayer() {
-      gameCtx.fillStyle = player.color;
-      gameCtx.fillRect(player.x, player.y, 1, 32);
-      gameCtx.fillStyle = player.red;
-      gameCtx.fillRect(player.x + 1, player.y, 1, 32);
+    gameCtx.fillRect(Math.round(player.x), Math.round(player.y), Math.round(player.width), Math.round(player.height));
     }
 
     // Input
@@ -72,15 +73,15 @@
       screenCtx.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
 
       // Compute correct scale (same for x and y!)
-      const scale = Math.min(
+      const scale = Math.floor(Math.min(
         screenCanvas.width / GAME_WIDTH,
         screenCanvas.height / GAME_HEIGHT
-      );
+      ));
 
       const drawWidth = GAME_WIDTH * scale;
       const drawHeight = GAME_HEIGHT * scale;
-      const offsetX = (screenCanvas.width - drawWidth) / 2;
-      const offsetY = (screenCanvas.height - drawHeight) / 2;
+      const offsetX = Math.floor((screenCanvas.width - GAME_WIDTH * scale) / 2);
+      const offsetY = Math.floor((screenCanvas.height - GAME_HEIGHT * scale) / 2);
 
       // Draw the game centered with correct ratio
       screenCtx.drawImage(gameCanvas, offsetX, offsetY, drawWidth, drawHeight);
