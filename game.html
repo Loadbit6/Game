@@ -10,6 +10,11 @@
 <body>
   <canvas id="screen"></canvas>
   <script>
+
+ // ===== Setup =====
+    const screenCanvas = document.getElementById("screen");
+    const screenCtx = screenCanvas.getContext("2d");
+    
     //sharp pixel stuff
 
     screenCtx.imageSmoothingEnabled = false;   // disable smoothing for sharp scaling
