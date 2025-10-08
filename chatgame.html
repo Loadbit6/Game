@@ -138,4 +138,31 @@
       }
 
       // Destination size and offsets (rounded to pixel boundaries)
-      const drawWidth = Math.round(GAME_WI_
+      const drawWidth = Math.round(GAME_WIDTH * scale);
+      const drawHeight = Math.round(GAME_HEIGHT * scale);
+      const offsetX = Math.round((screenCanvas.width - drawWidth) / 2);
+      const offsetY = Math.round((screenCanvas.height - drawHeight) / 2);
+
+      // draw the offscreen canvas scaled onto visible canvas (nearest neighbor)
+      screenCtx.drawImage(
+        gameCanvas,
+        0, 0, GAME_WIDTH, GAME_HEIGHT,
+        offsetX, offsetY, drawWidth, drawHeight
+      );
+
+      // debug: draw red border around the visible game area and scale text
+      screenCtx.strokeStyle = "red";
+      screenCtx.lineWidth = 2;
+      screenCtx.strokeRect(offsetX + 0.5, offsetY + 0.5, drawWidth - 1, drawHeight - 1);
+
+      screenCtx.fillStyle = "white";
+      screenCtx.font = "16px monospace";
+      screenCtx.fillText(`scale: ${scale.toFixed(2)}`, offsetX + 8, offsetY + 20);
+
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>
