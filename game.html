@@ -11,8 +11,11 @@
   <canvas id="screen"></canvas>
   <script>
     //sharp pixel stuff
-    screenCtx.imageSmoothingEnabled = false; // disable smoothing for sharp scaling
 
+    screenCtx.imageSmoothingEnabled = false;   // disable smoothing for sharp scaling
+    screenCtx.webkitImageSmoothingEnabled = false;
+    screenCtx.mozImageSmoothingEnabled = false;
+    screenCtx.msImageSmoothingEnabled = false;
     
     // Fixed game resolution
     const GAME_WIDTH = 400;
@@ -38,8 +41,22 @@
     // Player
     let player = { x: 16, y: 32, width: 16, height: 32, color: "lime" };
 
-    function drawPlayer() {
-    gameCtx.fillRect(Math.round(player.x), Math.round(player.y), Math.round(player.width), Math.round(player.height));
+        function drawPlayer() {
+      gameCtx.fillStyle = player.color;
+      gameCtx.fillRect(
+        Math.round(player.x),
+        Math.round(player.y),
+        Math.round(player.size),
+        Math.round(player.size)
+      );
+      // example sharp vertical line at player's right
+      gameCtx.fillStyle = "white";
+      gameCtx.fillRect(
+        Math.round(player.x + player.size + 1),
+        Math.round(player.y),
+        1,
+        Math.round(player.size)
+      );
     }
 
     // Input
@@ -63,28 +80,52 @@
       update();
       drawPlayer();
 
-      // Draw a red border around the game world
-      gameCtx.strokeStyle = "red";
-      gameCtx.lineWidth = 4;
-      gameCtx.strokeRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
       // Clear screen
       screenCtx.fillStyle = "black";
       screenCtx.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
 
-      // Compute correct scale (same for x and y!)
-      const scale = Math.floor(Math.min(
+          // Compute candidate scale (could be fractional)
+      const candidate = Math.min(
         screenCanvas.width / GAME_WIDTH,
         screenCanvas.height / GAME_HEIGHT
-      ));
+      );
 
-      const drawWidth = GAME_WIDTH * scale;
-      const drawHeight = GAME_HEIGHT * scale;
-      const offsetX = Math.floor((screenCanvas.width - GAME_WIDTH * scale) / 2);
-      const offsetY = Math.floor((screenCanvas.height - GAME_HEIGHT * scale) / 2);
+      // Use integer scale when >=1 for perfect pixel scaling.
+      // If candidate < 1 (screen smaller than game), allow fractional scale
+      // so the game still fits (avoids scale = 0).
+      const scale = candidate >= 1 ? Math.floor(candidate) : candidate;
 
-      // Draw the game centered with correct ratio
-      screenCtx.drawImage(gameCanvas, offsetX, offsetY, drawWidth, drawHeight);
+      // If scale is zero or negative (edge case), bail to avoid invisible draw
+      if (!isFinite(scale) || scale <= 0) {
+        // show message on screen so you know something's wrong
+        screenCtx.fillStyle = "white";
+        screenCtx.font = "18px monospace";
+        screenCtx.fillText("Screen too small to render game.", 10, 30);
+        requestAnimationFrame(loop);
+        return;
+      }
+
+      // Destination size and offsets (rounded to pixel boundaries)
+      const drawWidth = Math.round(GAME_WIDTH * scale);
+      const drawHeight = Math.round(GAME_HEIGHT * scale);
+      const offsetX = Math.round((screenCanvas.width - drawWidth) / 2);
+      const offsetY = Math.round((screenCanvas.height - drawHeight) / 2);
+
+      // draw the offscreen canvas scaled onto visible canvas (nearest neighbor)
+      screenCtx.drawImage(
+        gameCanvas,
+        0, 0, GAME_WIDTH, GAME_HEIGHT,
+        offsetX, offsetY, drawWidth, drawHeight
+      );
+
+      // debug: draw red border around the visible game area and scale text
+      screenCtx.strokeStyle = "red";
+      screenCtx.lineWidth = 2;
+      screenCtx.strokeRect(offsetX + 0.5, offsetY + 0.5, drawWidth - 1, drawHeight - 1);
+
+      screenCtx.fillStyle = "white";
+      screenCtx.font = "16px monospace";
+      screenCtx.fillText(`scale: ${scale.toFixed(2)}`, offsetX + 8, offsetY + 20);
 
       requestAnimationFrame(loop);
     }
