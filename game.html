@@ -36,7 +36,9 @@
 
     function drawPlayer() {
       gameCtx.fillStyle = player.color;
-      gameCtx.fillRect(player.x, player.y, player.width, player.height);
+      gameCtx.fillRect(player.x, player.y, 1, 32);
+      gameCtx.fillStyle = player.red;
+      gameCtx.fillRect(player.x + 1, player.y, 1, 32);
     }
 
     // Input
