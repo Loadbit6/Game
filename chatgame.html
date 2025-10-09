@@ -3,8 +3,16 @@
 <head>
   <title>slup2</title>
   <style>
-    body { margin: 0; background: black; overflow: hidden; }
-    canvas { display: block; image-rendering: pixelated; }
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
   </style>
 </head>
 <body>
@@ -13,13 +21,16 @@
     const GAME_WIDTH = 400;
     const GAME_HEIGHT = 225;
 
+    // Internal render target (small resolution)
     const gameCanvas = document.createElement("canvas");
     gameCanvas.width = GAME_WIDTH;
     gameCanvas.height = GAME_HEIGHT;
-    const gameCtx = gameCanvas.getContext("2d");
+    const gameCtx = gameCanvas.getContext("2d", { alpha: false });
+    gameCtx.imageSmoothingEnabled = false;
 
+    // Screen canvas (scaled up)
     const screenCanvas = document.getElementById("screen");
-    const screenCtx = screenCanvas.getContext("2d");
+    const screenCtx = screenCanvas.getContext("2d", { alpha: false });
     screenCtx.imageSmoothingEnabled = false;
 
     function resizeCanvas() {
@@ -30,12 +41,12 @@
     resizeCanvas();
 
     // Player
-    let player = { x: 50, y: 50, width: 16, height: 16, color: [0, 255, 0] };
+    let player = { x: 50, y: 50, width: 4, height: 4, color: [0, 255, 0] };
 
     // Input
     let keys = {};
-    window.addEventListener("keydown", e => keys[e.key] = true);
-    window.addEventListener("keyup", e => keys[e.key] = false);
+    window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
     // Pixel buffer
     let buffer = gameCtx.createImageData(GAME_WIDTH, GAME_HEIGHT);
@@ -59,32 +70,49 @@
       data[i + 3] = a;
     }
 
-    function drawPlayer() {
-      setPixel(player.x, player.y, 200, 100, 0);
+    function drawRect(x, y, w, h, r, g, b) {
+      for (let yy = 0; yy < h; yy++) {
+        for (let xx = 0; xx < w; xx++) {
+          setPixel(x + xx, y + yy, r, g, b);
+        }
+      }
+    }
 
+    function drawPlayer() {
+      drawRect(player.x, player.y, player.width, player.height, ...player.color);
     }
 
     function update() {
-      if (keys["w"]) player.y -= 1;
-      if (keys["s"]) player.y += 1;
-      if (keys["a"]) player.x -= 1;
-      if (keys["d"]) player.x += 1;
+      const speed = 1;
+      if (keys["w"]) player.y -= speed;
+      if (keys["s"]) player.y += speed;
+      if (keys["a"]) player.x -= speed;
+      if (keys["d"]) player.x += speed;
     }
 
     function loop() {
-      clearBuffer(34, 34, 34);
+      clearBuffer(30, 30, 30);
       update();
       drawPlayer();
+
+      // Push pixel buffer to internal game canvas
       gameCtx.putImageData(buffer, 0, 0);
 
-      const scale = Math.min(screenCanvas.width / GAME_WIDTH, screenCanvas.height / GAME_HEIGHT);
+      // Calculate scale (integer scaling for pixel perfection)
+      const scale = Math.floor(Math.min(
+        screenCanvas.width / GAME_WIDTH,
+        screenCanvas.height / GAME_HEIGHT
+      ));
+
       const drawWidth = GAME_WIDTH * scale;
       const drawHeight = GAME_HEIGHT * scale;
       const offsetX = (screenCanvas.width - drawWidth) / 2;
       const offsetY = (screenCanvas.height - drawHeight) / 2;
 
       screenCtx.clearRect(0, 0, screenCanvas.width, screenCanvas.height);
+      screenCtx.imageSmoothingEnabled = false;
       screenCtx.drawImage(gameCanvas, offsetX, offsetY, drawWidth, drawHeight);
+
       requestAnimationFrame(loop);
     }
 
