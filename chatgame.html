@@ -3,10 +3,13 @@
 <head>
   <title>slup2</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      background: black;
+      padding: 0;
       overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background: black;
     }
     canvas {
       display: block;
@@ -21,14 +24,14 @@
     const GAME_WIDTH = 400;
     const GAME_HEIGHT = 225;
 
-    // Internal render target (small resolution)
+    // Internal pixel canvas
     const gameCanvas = document.createElement("canvas");
     gameCanvas.width = GAME_WIDTH;
     gameCanvas.height = GAME_HEIGHT;
     const gameCtx = gameCanvas.getContext("2d", { alpha: false });
     gameCtx.imageSmoothingEnabled = false;
 
-    // Screen canvas (scaled up)
+    // On-screen canvas
     const screenCanvas = document.getElementById("screen");
     const screenCtx = screenCanvas.getContext("2d", { alpha: false });
     screenCtx.imageSmoothingEnabled = false;
@@ -91,27 +94,33 @@
     }
 
     function loop() {
-      clearBuffer(30, 30, 30);
+      // Clear buffer
+      clearBuffer(34, 34, 34);
+
+      // Update & draw player
       update();
       drawPlayer();
 
       // Push pixel buffer to internal game canvas
       gameCtx.putImageData(buffer, 0, 0);
 
-      // Calculate scale (integer scaling for pixel perfection)
-      const scale = Math.floor(Math.min(
-        screenCanvas.width / GAME_WIDTH,
-        screenCanvas.height / GAME_HEIGHT
-      ));
+      // Compute integer scale to maintain aspect ratio
+      const scaleX = Math.floor(screenCanvas.width / GAME_WIDTH);
+      const scaleY = Math.floor(screenCanvas.height / GAME_HEIGHT);
+      const scale = Math.min(scaleX, scaleY);
 
       const drawWidth = GAME_WIDTH * scale;
       const drawHeight = GAME_HEIGHT * scale;
-      const offsetX = (screenCanvas.width - drawWidth) / 2;
-      const offsetY = (screenCanvas.height - drawHeight) / 2;
+      const offsetX = (screenCanvas.width - drawWidth) > 0 ? (screenCanvas.width - drawWidth) / 2 : 0;
+      const offsetY = (screenCanvas.height - drawHeight) > 0 ? (screenCanvas.height - drawHeight) / 2 : 0;
 
-      screenCtx.clearRect(0, 0, screenCanvas.width, screenCanvas.height);
+      // Fill remaining space with background
+      screenCtx.fillStyle = "#222";
+      screenCtx.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
+
+      // Draw the scaled game canvas
       screenCtx.imageSmoothingEnabled = false;
-      screenCtx.drawImage(gameCanvas, offsetX, offsetY, drawWidth, drawHeight);
+      screenCtx.drawImage(gameCanvas, 0, 0, GAME_WIDTH, GAME_HEIGHT, offsetX, offsetY, drawWidth, drawHeight);
 
       requestAnimationFrame(loop);
     }
