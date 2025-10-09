@@ -60,12 +60,8 @@
     }
 
     function drawPlayer() {
-      for (let y = 0; y < player.height; y++) {
-        for (let x = 0; x < player.width; x++) {
-          const alt = (x + y) % 2 === 0 ? player.color : [255, 0, 0];
-          setPixel(Math.floor(player.x) + x, Math.floor(player.y) + y, alt[0], alt[1], alt[2]);
-        }
-      }
+      setPixel(player.x, player.y, 200, 100, 0);
+
     }
 
     function update() {
