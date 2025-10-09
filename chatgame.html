@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>slup</title>
+  <title>slup2</title>
   <style>
     body { margin: 0; background: black; overflow: hidden; }
     canvas { display: block; image-rendering: pixelated; }
@@ -29,34 +29,44 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    // Pixel buffer for dynamic drawing
-    const pixelBuffer = gameCtx.createImageData(GAME_WIDTH, GAME_HEIGHT);
-    const bufferData = pixelBuffer.data;
+    // Player
+    let player = { x: 50, y: 50, width: 16, height: 16, color: [0, 255, 0] };
+
+    // Input
+    let keys = {};
+    window.addEventListener("keydown", e => keys[e.key] = true);
+    window.addEventListener("keyup", e => keys[e.key] = false);
+
+    // Pixel buffer
+    let buffer = gameCtx.createImageData(GAME_WIDTH, GAME_HEIGHT);
+    let data = buffer.data;
+
+    function clearBuffer(r = 0, g = 0, b = 0) {
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = r;
+        data[i + 1] = g;
+        data[i + 2] = b;
+        data[i + 3] = 255;
+      }
+    }
 
     function setPixel(x, y, r, g, b, a = 255) {
       if (x < 0 || y < 0 || x >= GAME_WIDTH || y >= GAME_HEIGHT) return;
       const i = (y * GAME_WIDTH + x) * 4;
-      bufferData[i] = r;
-      bufferData[i + 1] = g;
-      bufferData[i + 2] = b;
-      bufferData[i + 3] = a;
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+      data[i + 3] = a;
     }
 
-    function clearBuffer(r = 0, g = 0, b = 0) {
-      for (let i = 0; i < bufferData.length; i += 4) {
-        bufferData[i] = r;
-        bufferData[i + 1] = g;
-        bufferData[i + 2] = b;
-        bufferData[i + 3] = 255;
+    function drawPlayer() {
+      for (let y = 0; y < player.height; y++) {
+        for (let x = 0; x < player.width; x++) {
+          const alt = (x + y) % 2 === 0 ? player.color : [255, 0, 0];
+          setPixel(Math.floor(player.x) + x, Math.floor(player.y) + y, alt[0], alt[1], alt[2]);
+        }
       }
     }
-
-    // Player
-    let player = { x: 16, y: 32, width: 16, height: 16, color: [0, 255, 0] };
-
-    let keys = {};
-    window.addEventListener("keydown", e => keys[e.key] = true);
-    window.addEventListener("keyup", e => keys[e.key] = false);
 
     function update() {
       if (keys["w"]) player.y -= 1;
@@ -65,15 +75,11 @@
       if (keys["d"]) player.x += 1;
     }
 
-    function drawPlayer() {
-     
-    }
-
     function loop() {
       clearBuffer(34, 34, 34);
       update();
       drawPlayer();
-      gameCtx.putImageData(pixelBuffer, 0, 0);
+      gameCtx.putImageData(buffer, 0, 0);
 
       const scale = Math.min(screenCanvas.width / GAME_WIDTH, screenCanvas.height / GAME_HEIGHT);
       const drawWidth = GAME_WIDTH * scale;
